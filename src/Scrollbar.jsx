@@ -1,4 +1,5 @@
 import React from 'react';
+import shallowCompare from 'react-addons-shallow-compare';
 import {Motion, spring} from 'react-motion';
 import {modifyObjValues} from './utils';
 import {styles} from "./styles";
@@ -35,6 +36,10 @@ class ScrollBar extends React.Component {
             this.props.ownerDocument.addEventListener("mousemove", this.bindedHandleMouseMove);
             this.props.ownerDocument.addEventListener("mouseup", this.bindedHandleMouseUp);
         } 
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+        return shallowCompare(this, nextProps, nextState);
     }
 
     componentWillReceiveProps(nextProps){
