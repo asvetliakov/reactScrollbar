@@ -15,7 +15,7 @@ export const styles = {
     },
     scrollBarContainer: {
         position: "absolute",
-        background: "black",
+        background: "none",
         opacity: 0.1,
         zIndex: 9999,
         WebkitTransition: "all .4s",

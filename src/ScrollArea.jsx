@@ -22,7 +22,8 @@ export default class ScrollArea extends React.Component{
             realHeight: 0,
             containerHeight: 0,
             realWidth: 0,
-            containerWidth: 0
+            containerWidth: 0,
+            isHovered: false
         };
 
         this.scrollArea = {
@@ -65,6 +66,8 @@ export default class ScrollArea extends React.Component{
         this.handleTouchStart = this.handleTouchStart.bind(this);
         this.handleTouchMove = this.handleTouchMove.bind(this);
         this.handleTouchEnd = this.handleTouchEnd.bind(this);
+        this.handleMouseEnter = this.handleMouseEnter.bind(this);
+        this.handleMouseLeave = this.handleMouseLeave.bind(this);
     }
 
     getChildContext(){
@@ -96,6 +99,8 @@ export default class ScrollArea extends React.Component{
             verticalScrollbarStyle, horizontalContainerStyle, horizontalScrollbarStyle} = this.props;
         let withMotion = this.props.smoothScrolling && 
             (this.state.eventType === eventTypes.wheel || this.state.eventType === eventTypes.api || this.state.eventType === eventTypes.touchEnd);
+
+        const isHovered = this.state.isHovered;
 
         // Merge vertical container & scrollbar styles with default ones if passed
         const finalVerticalContainerStyle = (verticalContainerStyle) ? {...styles.verticalScrollBarContainer, ...verticalContainerStyle} : styles.verticalScrollBarContainer;
@@ -151,7 +156,10 @@ export default class ScrollArea extends React.Component{
         };
         let springifiedContentStyle = withMotion ? modifyObjValues(calculatedContentStyle, x => spring(x)) : calculatedContentStyle;
 
-        const finalContentStyle = (contentStyle) ? {...styles.scrollAreaContent, ...contentStyle} : styles.scrollAreaContent;
+        let finalContentStyle = (contentStyle) ? {...styles.scrollAreaContent, ...contentStyle} : styles.scrollAreaContent;
+        if (isHovered) {
+            finalContentStyle = {...finalContentStyle, ...styles.scrollAreaHover};
+        }
         const finalMainStyle = (style) ? {...styles.scrollArea, ...style} : styles.scrollArea;
 
         return (
@@ -282,6 +290,16 @@ export default class ScrollArea extends React.Component{
         let newState = this.computeSizes();
         newState = this.getModifiedPositionsIfNeeded(newState);
         this.setStateFromEvent(newState);
+    }
+
+    handleMouseEnter(e) {
+        e.stopPropagation();
+        this.setState({ isHovered: true });
+    }
+
+    handleMouseLeave(e) {
+        e.stopPropagation();
+        this.setState({ isHovered: false });
     }
 
     composeNewState(deltaX, deltaY){
