@@ -101,7 +101,7 @@ interface ScrollAreaProps {
      * Event which can notify the parent component when the container scrolls.
      * @param value informations about current position
      */
-    onScroll?: (value: {leftPosition: number, topPosition: number, containerHeight: number, containerWidth: number, realHeight: number, realWidth: number}) => void;
+    onScroll?: (value: ScrollValue) => void;
     /**
      * You can override window to make scrollarea works inside iframe
      * @default window
@@ -130,4 +130,45 @@ interface ScrollAreaProps {
     swapWheelAxes?: boolean;
 }
 
-export default class ScrollArea extends React.Component<ScrollAreaProps, {}> {}
+interface ScrollAreaMethods {
+    /**
+     * That method allows manual refreshing of the scrollbar.
+     */
+    refresh(): void;
+    /**
+     * It allows to scroll to the top of ScrollArea component.
+     */
+    scrollTop(): void;
+    /**
+     * It allows to scroll to the bottom of ScrollArea component.
+     */
+    scrollBottom(): void;
+    /**
+     * It moves vertical scrollbar.
+     * @param topPosition topPosition is a distance between the top of scrollArea container and the top of scrollArea content.
+     */
+    scrollYTo(topPosition: number): void;
+    /**
+     * It allows to scroll to the left of ScrollArea component.
+     */
+    scrollLeft(): void;
+    /**
+     * It allows to scroll to the right of ScrollArea component.
+     */
+    scrollRight(): void;
+    /**
+     * It moves horizontal scrollbar.
+     * @param leftPosition leftPosition is a distance between left edge of scrollArea container and left edge of scrollArea content.
+     */
+    scrollXTo(leftPosition: number): void;
+}
+
+export default class ScrollArea extends React.Component<ScrollAreaProps, {}> implements ScrollAreaMethods {
+    refresh(): void
+    scrollTop(): void
+    scrollBottom(): void
+    scrollYTo(topPosition: number): void
+    scrollLeft(): void
+    scrollRight(): void
+    scrollXTo(leftPosition: number): void
+}
