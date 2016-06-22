@@ -3,6 +3,7 @@ import ScrollBar from './Scrollbar';
 import {findDOMNode, warnAboutFunctionChild, warnAboutElementChild, positiveOrZero, modifyObjValues} from './utils';
 import lineHeight from 'line-height';
 import {Motion, spring} from 'react-motion';
+import {styles} from "./styles";
 
 const eventTypes= {
     wheel: 'wheel',
@@ -56,6 +57,14 @@ export default class ScrollArea extends React.Component{
         }
 
         this.bindedHandleWindowResize = this.handleWindowResize.bind(this);
+
+        this.handleScrollbarMove = this.handleScrollbarMove.bind(this);
+        this.handleScrollbarYPositionChange = this.handleScrollbarYPositionChange.bind(this);
+        this.handleScrollbarXPositionChange = this.handleScrollbarXPositionChange.bind(this);
+        this.handleWheel = this.handleWheel.bind(this);
+        this.handleTouchStart = this.handleTouchStart.bind(this);
+        this.handleTouchMove = this.handleTouchMove.bind(this);
+        this.handleTouchEnd = this.handleTouchEnd.bind(this);
     }
 
     getChildContext(){
@@ -83,9 +92,14 @@ export default class ScrollArea extends React.Component{
     }
 
     render(){
-        let {children, className, contentClassName, ownerDocument} = this.props
+        let {children, className, contentClassName, ownerDocument, style, contentStyle, verticalContainerStyle,
+            verticalScrollbarStyle, horizontalContainerStyle, horizontalScrollbarStyle} = this.props;
         let withMotion = this.props.smoothScrolling && 
             (this.state.eventType === eventTypes.wheel || this.state.eventType === eventTypes.api || this.state.eventType === eventTypes.touchEnd);
+
+        // Merge vertical container & scrollbar styles with default ones if passed
+        const finalVerticalContainerStyle = (verticalContainerStyle) ? {...styles.verticalScrollBarContainer, ...verticalContainerStyle} : styles.verticalScrollBarContainer;
+        const finalVerticalScrollbarStyle = (verticalScrollbarStyle) ? { ...styles.verticalScrollBar, ...verticalScrollbarStyle} : styles.verticalScrollBar;
 
         let scrollbarY = this.canScrollY()? (
             <ScrollBar
@@ -93,14 +107,18 @@ export default class ScrollArea extends React.Component{
                 realSize={this.state.realHeight}
                 containerSize={this.state.containerHeight}
                 position={this.state.topPosition}
-                onMove={this.handleScrollbarMove.bind(this)}
-                onPositionChange={this.handleScrollbarYPositionChange.bind(this)}
-                containerStyle={this.props.verticalContainerStyle}
-                scrollbarStyle={this.props.verticalScrollbarStyle}
+                onMove={this.handleScrollbarMove}
+                onPositionChange={this.handleScrollbarYPositionChange}
+                containerStyle={finalVerticalContainerStyle}
+                scrollbarStyle={finalVerticalScrollbarStyle}
                 smoothScrolling={withMotion}
                 minScrollSize={this.props.minScrollSize}
                 type="vertical"/>
         ): null;
+
+        // Merge horizontal container & scrollbar styles with default ones if passed
+        const finalHorizontalContainerStyle = (horizontalContainerStyle) ? {...styles.horizontalScrollBarContainer, ...horizontalContainerStyle} : styles.horizontalScrollBarContainer;
+        const finalHorizontalScrollbarStyle = (horizontalScrollbarStyle) ? {...styles.horizontalScrollBar, ...horizontalScrollbarStyle} : styles.horizontalScrollBar;
 
         let scrollbarX = this.canScrollX()? (
             <ScrollBar
@@ -108,10 +126,10 @@ export default class ScrollArea extends React.Component{
                 realSize={this.state.realWidth}
                 containerSize={this.state.containerWidth}
                 position={this.state.leftPosition}
-                onMove={this.handleScrollbarMove.bind(this)}
-                onPositionChange={this.handleScrollbarXPositionChange.bind(this)}
-                containerStyle={this.props.horizontalContainerStyle}
-                scrollbarStyle={this.props.horizontalScrollbarStyle}
+                onMove={this.handleScrollbarMove}
+                onPositionChange={this.handleScrollbarXPositionChange}
+                containerStyle={finalHorizontalContainerStyle}
+                scrollbarStyle={finalHorizontalScrollbarStyle}
                 smoothScrolling={withMotion}
                 minScrollSize={this.props.minScrollSize}
                 type="horizontal"/>
@@ -127,22 +145,25 @@ export default class ScrollArea extends React.Component{
         let classes = 'scrollarea ' + (className || '');
         let contentClasses = 'scrollarea-content ' + (contentClassName || '');
         
-        let contentStyle = {
+        let calculatedContentStyle = {
             marginTop: -this.state.topPosition,
             marginLeft: -this.state.leftPosition
         };
-        let springifiedContentStyle = withMotion ? modifyObjValues(contentStyle, x => spring(x)) : contentStyle;
+        let springifiedContentStyle = withMotion ? modifyObjValues(calculatedContentStyle, x => spring(x)) : calculatedContentStyle;
+
+        const finalContentStyle = (contentStyle) ? {...styles.scrollAreaContent, ...contentStyle} : styles.scrollAreaContent;
+        const finalMainStyle = (style) ? {...styles.scrollArea, ...style} : styles.scrollArea;
 
         return (
-            <Motion style={{...this.props.contentStyle, ...springifiedContentStyle}}>
+            <Motion style={springifiedContentStyle}>
                     { style =>
-                        <div ref={x => this.wrapper = x} style={this.props.style} className={classes} onWheel={this.handleWheel.bind(this)}>
+                        <div ref={x => this.wrapper = x} style={finalMainStyle} className={classes} onWheel={this.handleWheel}>
                             <div ref={x => this.content = x}
-                                 style={style}
+                                 style={{...finalContentStyle, ...style}}
                                  className={contentClasses}
-                                 onTouchStart={this.handleTouchStart.bind(this)}
-                                 onTouchMove={this.handleTouchMove.bind(this)}
-                                 onTouchEnd={this.handleTouchEnd.bind(this)}>
+                                 onTouchStart={this.handleTouchStart}
+                                 onTouchMove={this.handleTouchMove}
+                                 onTouchEnd={this.handleTouchEnd}>
                                  {children}
                             </div>
                              {scrollbarY}

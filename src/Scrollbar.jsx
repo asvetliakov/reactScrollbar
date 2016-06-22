@@ -1,6 +1,7 @@
 import React from 'react';
 import {Motion, spring} from 'react-motion';
 import {modifyObjValues} from './utils';
+import {styles} from "./styles";
 
 class ScrollBar extends React.Component {
     constructor(props){
@@ -10,6 +11,7 @@ class ScrollBar extends React.Component {
             position: newState.position,
             scrollSize: newState.scrollSize,
             isDragging: false,
+            isHovered: false,
             lastClientPosition: 0
         }
 
@@ -20,6 +22,12 @@ class ScrollBar extends React.Component {
         }
 
         this.bindedHandleMouseUp = this.handleMouseUp.bind(this);
+
+        this.handleMouseEnter = this.handleMouseEnter.bind(this);
+        this.handleMouseLeave = this.handleMouseLeave.bind(this);
+
+        this.handleMouseDown = this.handleMouseDown.bind(this);
+        this.handleScrollBarContainerClick = this.handleScrollBarContainerClick.bind(this);
     }
 
     componentDidMount(){
@@ -59,29 +67,41 @@ class ScrollBar extends React.Component {
     }
 
     render(){
-        let {smoothScrolling, isDragging, type, scrollbarStyle, containerStyle} = this.props;
-        let isVoriziontal = type === 'horizontal';
+        let {smoothScrolling, type, scrollbarStyle, containerStyle} = this.props;
+        let {isDragging, isHovered} = this.state;
+        let isHorizontal = type === 'horizontal';
         let isVertical = type === 'vertical';
         let scrollStyles = this.createScrollStyles();
         let springifiedScrollStyles = smoothScrolling ? modifyObjValues(scrollStyles, x => spring(x)) : scrollStyles;
 
-        let scrollbarClasses = `scrollbar-container ${isDragging ? 'active' : ''} ${isVoriziontal ? 'horizontal' : ''} ${isVertical ? 'vertical' : ''}`; 
+        let scrollbarClasses = `scrollbar-container ${isDragging ? 'active' : ''} ${isHorizontal ? 'horizontal' : ''} ${isVertical ? 'vertical' : ''}`;
+
+        // TODO: creates new object, consider optimization
+        let finalContainerStyle = {...styles.scrollBarContainer, ...containerStyle};
+        if (isDragging) {
+            finalContainerStyle = {...finalContainerStyle, ...styles.scrollBarContainerActive};
+        } else if (isHovered) {
+            finalContainerStyle = {...finalContainerStyle, ...styles.scrollBarContainerHover};
+        }
+
 
         return (
-            <Motion style={{...scrollbarStyle, ...springifiedScrollStyles}}>
-                { style => 
-                    <div className={scrollbarClasses} 
-                        style={containerStyle} 
-                        onMouseDown={this.handleScrollBarContainerClick.bind(this)}
-                        ref={ x => { this.scrollbarContainer = x}}>
-                        
-                        <div className="scrollbar"
-                            style={style}
-                            onMouseDown={this.handleMouseDown.bind(this)}
+            <Motion style={springifiedScrollStyles}>
+                    { style =>
+                        <div className={scrollbarClasses}
+                             style={finalContainerStyle}
+                             onMouseDown={this.handleScrollBarContainerClick}
+                             onMouseEnter={this.handleMouseEnter}
+                             onMouseLeave={this.handleMouseLeave}
+                             ref={ x => { this.scrollbarContainer = x}}>
+
+                            <div className="scrollbar"
+                                 style={{...scrollbarStyle, ...style}}
+                                 onMouseDown={this.handleMouseDown}
                             >
+                            </div>
                         </div>
-                    </div>
-                }
+                    }
             </Motion>
         );
     }
@@ -132,6 +152,18 @@ class ScrollBar extends React.Component {
     handleMouseUp(e){
         e.preventDefault();
         this.setState({isDragging: false });
+    }
+
+    handleMouseEnter(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ isHovered: true });
+    }
+
+    handleMouseLeave(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({ isHovered: false });
     }
 
     createScrollStyles(){

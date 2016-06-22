@@ -1,5 +1,5 @@
 import expect from 'expect';
-import {positiveOrZero, modifyObjValues, isReact13} from '../src/js/utils';
+import {positiveOrZero, modifyObjValues, isReact13} from '../src/utils';
 
 describe('utils', () => {
    describe('positiveOrZero', () => {
