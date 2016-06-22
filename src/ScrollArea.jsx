@@ -49,7 +49,7 @@ export default class ScrollArea extends React.Component{
                 this.scrollXTo(position);
             }
         };
-        
+
         this.evntsPreviousValues = {
             clientX: 0,
             clientY: 0,
@@ -96,15 +96,21 @@ export default class ScrollArea extends React.Component{
 
     render(){
         let {children, className, contentClassName, ownerDocument, style, contentStyle, verticalContainerStyle,
-            verticalScrollbarStyle, horizontalContainerStyle, horizontalScrollbarStyle} = this.props;
-        let withMotion = this.props.smoothScrolling && 
+            verticalScrollbarStyle, horizontalContainerStyle, horizontalScrollbarStyle, contentHoverStyle,
+        verticalContainerActiveStyle, verticalContainerHoverStyle, horizontalContainerActiveStyle, horizontalContainerHoverStyle} = this.props;
+        let withMotion = this.props.smoothScrolling &&
             (this.state.eventType === eventTypes.wheel || this.state.eventType === eventTypes.api || this.state.eventType === eventTypes.touchEnd);
 
         const isHovered = this.state.isHovered;
 
+        const contentHoveredStyle = {...styles.scrollAreaHover, ...contentHoverStyle};
+
         // Merge vertical container & scrollbar styles with default ones if passed
-        const finalVerticalContainerStyle = (verticalContainerStyle) ? {...styles.verticalScrollBarContainer, ...verticalContainerStyle} : styles.verticalScrollBarContainer;
-        const finalVerticalScrollbarStyle = (verticalScrollbarStyle) ? { ...styles.verticalScrollBar, ...verticalScrollbarStyle} : styles.verticalScrollBar;
+        let finalVerticalContainerStyle = {...styles.verticalScrollBarContainer, ...verticalContainerStyle};
+        if (isHovered) {
+            finalVerticalContainerStyle = {...finalVerticalContainerStyle, ...contentHoveredStyle};
+        }
+        const finalVerticalScrollbarStyle = { ...styles.verticalScrollBar, ...verticalScrollbarStyle};
 
         let scrollbarY = this.canScrollY()? (
             <ScrollBar
@@ -115,6 +121,8 @@ export default class ScrollArea extends React.Component{
                 onMove={this.handleScrollbarMove}
                 onPositionChange={this.handleScrollbarYPositionChange}
                 containerStyle={finalVerticalContainerStyle}
+                containerActiveStyle={verticalContainerActiveStyle}
+                containerHoverStyle={verticalContainerHoverStyle}
                 scrollbarStyle={finalVerticalScrollbarStyle}
                 smoothScrolling={withMotion}
                 minScrollSize={this.props.minScrollSize}
@@ -122,8 +130,11 @@ export default class ScrollArea extends React.Component{
         ): null;
 
         // Merge horizontal container & scrollbar styles with default ones if passed
-        const finalHorizontalContainerStyle = (horizontalContainerStyle) ? {...styles.horizontalScrollBarContainer, ...horizontalContainerStyle} : styles.horizontalScrollBarContainer;
-        const finalHorizontalScrollbarStyle = (horizontalScrollbarStyle) ? {...styles.horizontalScrollBar, ...horizontalScrollbarStyle} : styles.horizontalScrollBar;
+        let finalHorizontalContainerStyle = {...styles.horizontalScrollBarContainer, ...horizontalContainerStyle};
+        if (isHovered) {
+            finalHorizontalContainerStyle = {...finalHorizontalContainerStyle, ...contentHoveredStyle};
+        }
+        const finalHorizontalScrollbarStyle = {...styles.horizontalScrollBar, ...horizontalScrollbarStyle};
 
         let scrollbarX = this.canScrollX()? (
             <ScrollBar
@@ -134,6 +145,8 @@ export default class ScrollArea extends React.Component{
                 onMove={this.handleScrollbarMove}
                 onPositionChange={this.handleScrollbarXPositionChange}
                 containerStyle={finalHorizontalContainerStyle}
+                containerActiveStyle={horizontalContainerActiveStyle}
+                containerHoverStyle={horizontalContainerHoverStyle}
                 scrollbarStyle={finalHorizontalScrollbarStyle}
                 smoothScrolling={withMotion}
                 minScrollSize={this.props.minScrollSize}
@@ -149,18 +162,15 @@ export default class ScrollArea extends React.Component{
 
         let classes = 'scrollarea ' + (className || '');
         let contentClasses = 'scrollarea-content ' + (contentClassName || '');
-        
+
         let calculatedContentStyle = {
             marginTop: -this.state.topPosition,
             marginLeft: -this.state.leftPosition
         };
         let springifiedContentStyle = withMotion ? modifyObjValues(calculatedContentStyle, x => spring(x)) : calculatedContentStyle;
 
-        let finalContentStyle = (contentStyle) ? {...styles.scrollAreaContent, ...contentStyle} : styles.scrollAreaContent;
-        if (isHovered) {
-            finalContentStyle = {...finalContentStyle, ...styles.scrollAreaHover};
-        }
-        const finalMainStyle = (style) ? {...styles.scrollArea, ...style} : styles.scrollArea;
+        let finalContentStyle = {...styles.scrollAreaContent, ...contentStyle};
+        const finalMainStyle = {...styles.scrollArea, ...style};
 
         return (
             <Motion style={springifiedContentStyle}>
@@ -171,7 +181,10 @@ export default class ScrollArea extends React.Component{
                                  className={contentClasses}
                                  onTouchStart={this.handleTouchStart}
                                  onTouchMove={this.handleTouchMove}
-                                 onTouchEnd={this.handleTouchEnd}>
+                                 onTouchEnd={this.handleTouchEnd}
+                                 onMouseEnter={this.handleMouseEnter}
+                                 onMouseLeave={this.handleMouseLeave}
+                            >
                                  {children}
                             </div>
                              {scrollbarY}
@@ -205,14 +218,14 @@ export default class ScrollArea extends React.Component{
     handleTouchMove(e){
         e.preventDefault();
         e.stopPropagation();
-        
+
         let {touches} = e;
         if(touches.length === 1){
             let {clientX, clientY} = touches[0];
 
             let deltaY = this.eventPreviousValues.clientY - clientY;
             let deltaX = this.eventPreviousValues.clientX - clientX;
-            
+
             this.eventPreviousValues = {
                 ...this.eventPreviousValues,
                 deltaY,
@@ -221,7 +234,7 @@ export default class ScrollArea extends React.Component{
                 clientX,
                 timestamp: Date.now()
             };
-            
+
             this.setStateFromEvent(this.composeNewState(-deltaX, -deltaY));
         }
     }
@@ -233,22 +246,22 @@ export default class ScrollArea extends React.Component{
         if(Date.now() - timestamp < 200){
             this.setStateFromEvent(this.composeNewState(-deltaX * 10, -deltaY * 10), eventTypes.touchEnd);
         }
-        
+
         this.eventPreviousValues = {
             ...this.eventPreviousValues,
             deltaY: 0,
             deltaX: 0
-        };      
+        };
     }
-    
+
     handleScrollbarMove(deltaY, deltaX){
-         this.setStateFromEvent(this.composeNewState(deltaX, deltaY));   
+         this.setStateFromEvent(this.composeNewState(deltaX, deltaY));
     }
-    
+
     handleScrollbarXPositionChange(position){
         this.scrollXTo(position);
     }
-    
+
     handleScrollbarYPositionChange(position){
         this.scrollYTo(position);
     }
@@ -256,7 +269,7 @@ export default class ScrollArea extends React.Component{
     handleWheel(e){
         let deltaY = e.deltaY;
         let deltaX = e.deltaX;
-        
+
         if(this.props.swapWheelAxes){
             [deltaY, deltaX] = [deltaX, deltaY];
         }
@@ -304,7 +317,7 @@ export default class ScrollArea extends React.Component{
 
     composeNewState(deltaX, deltaY){
         let newState = this.computeSizes();
-        
+
         if(this.canScrollY(newState)){
             newState.topPosition = this.computeTopPosition(deltaY, newState);
         }
@@ -324,8 +337,8 @@ export default class ScrollArea extends React.Component{
         let newLeftPosition = this.state.leftPosition - deltaX;
         return this.normalizeLeftPosition(newLeftPosition, sizes);
     }
-    
-    normalizeTopPosition(newTopPosition, sizes){    
+
+    normalizeTopPosition(newTopPosition, sizes){
         if(newTopPosition > sizes.realHeight - sizes.containerHeight){
             newTopPosition = sizes.realHeight - sizes.containerHeight;
         }
@@ -334,7 +347,7 @@ export default class ScrollArea extends React.Component{
         }
         return newTopPosition;
     }
-    
+
     normalizeLeftPosition(newLeftPosition, sizes){
         if(newLeftPosition > sizes.realWidth - sizes.containerWidth){
             newLeftPosition = sizes.realWidth - sizes.containerWidth;
@@ -373,7 +386,7 @@ export default class ScrollArea extends React.Component{
     scrollBottom(){
         this.scrollYTo((this.state.realHeight - this.state.containerHeight));
     }
-    
+
     scrollLeft(){
         this.scrollXTo(0);
     }
@@ -388,7 +401,7 @@ export default class ScrollArea extends React.Component{
             this.setStateFromEvent({topPosition: position}, eventTypes.api);
         }
     }
-    
+
     scrollXTo(leftPosition){
         if(this.canScrollX()){
             let position = this.normalizeLeftPosition(leftPosition, this.computeSizes());
@@ -431,11 +444,16 @@ ScrollArea.propTypes = {
     speed: React.PropTypes.number,
     contentClassName: React.PropTypes.string,
     contentStyle: React.PropTypes.object,
+    contentHoverStyle: React.PropTypes.object,
     vertical: React.PropTypes.bool,
     verticalContainerStyle: React.PropTypes.object,
+    verticalContainerActiveStyle: React.PropTypes.object,
+    verticalContainerHoverStyle: React.PropTypes.object,
     verticalScrollbarStyle: React.PropTypes.object,
     horizontal: React.PropTypes.bool,
     horizontalContainerStyle: React.PropTypes.object,
+    horizontalContainerActiveStyle: React.PropTypes.object,
+    horizontalContainerHoverStyle: React.PropTypes.object,
     horizontalScrollbarStyle: React.PropTypes.object,
     onScroll: React.PropTypes.func,
     contentWindow: React.PropTypes.any,

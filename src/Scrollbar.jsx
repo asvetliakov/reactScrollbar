@@ -67,7 +67,7 @@ class ScrollBar extends React.Component {
     }
 
     render(){
-        let {smoothScrolling, type, scrollbarStyle, containerStyle} = this.props;
+        let {smoothScrolling, type, scrollbarStyle, containerStyle, containerStyleHover, containerStyleActive} = this.props;
         let {isDragging, isHovered} = this.state;
         let isHorizontal = type === 'horizontal';
         let isVertical = type === 'vertical';
@@ -79,9 +79,9 @@ class ScrollBar extends React.Component {
         // TODO: creates new object, consider optimization
         let finalContainerStyle = {...styles.scrollBarContainer, ...containerStyle};
         if (isDragging) {
-            finalContainerStyle = {...finalContainerStyle, ...styles.scrollBarContainerActive};
+            finalContainerStyle = {...finalContainerStyle, ...styles.scrollBarContainerActive, ...containerStyleActive};
         } else if (isHovered) {
-            finalContainerStyle = {...finalContainerStyle, ...styles.scrollBarContainerHover};
+            finalContainerStyle = {...finalContainerStyle, ...styles.scrollBarContainerHover, ...containerStyleHover};
         }
 
 
@@ -196,6 +196,8 @@ ScrollBar.propTypes = {
     containerSize: React.PropTypes.number,
     position: React.PropTypes.number,
     containerStyle: React.PropTypes.object,
+    containerHoverStyle: React.PropTypes.object,
+    containerActiveStyle: React.PropTypes.object,
     scrollbarStyle: React.PropTypes.object,
     type: React.PropTypes.oneOf(['vertical', 'horizontal']),
     ownerDocument: React.PropTypes.any,

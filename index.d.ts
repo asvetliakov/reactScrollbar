@@ -52,6 +52,10 @@ interface ScrollAreaProps {
      */
     contentStyle?: React.CSSProperties;
     /**
+     * Inline style applied to scrollbar container when content area is hovered
+     */
+    contentHoverStyle?: React.CSSProperties;
+    /**
      * When set to false, vertical scrollbar will not be available, regardless of the content height
      * @default true
      */
@@ -60,6 +64,14 @@ interface ScrollAreaProps {
      * Inline styles applied to vertical scrollbar's container. Will be merged with default styles
      */
     verticalContainerStyle?: React.CSSProperties;
+    /**
+     * Inline style applied to vertical scrollbar container when scrollbar is active while dragging
+     */
+    verticalContainerActiveStyle?: React.CSSProperties;
+    /**
+     * Inline style applied to vertical scrollbar container when scrollbar is active while hovered
+     */
+    verticalContainerHoverStyle?: React.CSSProperties;
     /**
      * Inline styles applied to vertical scrollbar. Will be merged with default styles
      */
@@ -73,6 +85,14 @@ interface ScrollAreaProps {
      * Inline styles applied to horizontal scrollbar's container. Will be merged with default styles
      */
     horizontalContainerStyle?: React.CSSProperties;
+    /**
+     * Inline style applied to horizontal scrollbar container when scrollbar is active while dragging
+     */
+    horizontalContainerActiveStyle?: React.CSSProperties;
+    /**
+     * Inline style applied to horizontal scrollbar container when scrollbar is active while hovered
+     */
+    horizontalContainerHoverStyle?: React.CSSProperties;
     /**
      * Inline styles applied to horizontal scrollbar. Will be merged with default styles
      */
