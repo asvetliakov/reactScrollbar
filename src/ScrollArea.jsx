@@ -1,4 +1,5 @@
 import React from 'react';
+import shallowCompare from 'react-addons-shallow-compare';
 import ScrollBar from './Scrollbar';
 import {findDOMNode, warnAboutFunctionChild, warnAboutElementChild, positiveOrZero, modifyObjValues} from './utils';
 import lineHeight from 'line-height';
@@ -84,6 +85,10 @@ export default class ScrollArea extends React.Component{
         this.setSizesToState();
     }
 
+    shouldComponentUpdate(nextProps, nextState) {
+        return shallowCompare(this, nextProps, nextState);
+    }
+
     componentWillUnmount(){
         if(this.props.contentWindow){
             this.props.contentWindow.removeEventListener("resize", this.bindedHandleWindowResize);
@@ -106,11 +111,12 @@ export default class ScrollArea extends React.Component{
         const contentHoveredStyle = {...styles.scrollAreaHover, ...contentHoverStyle};
 
         // Merge vertical container & scrollbar styles with default ones if passed
-        let finalVerticalContainerStyle = {...styles.verticalScrollBarContainer, ...verticalContainerStyle};
+        // Trying to make optimization here - if additional styles are not used return const object
+        let finalVerticalContainerStyle = (verticalContainerStyle) ? {...styles.verticalScrollBarContainer, ...verticalContainerStyle} : styles.verticalScrollBarContainer;
         if (isHovered) {
             finalVerticalContainerStyle = {...finalVerticalContainerStyle, ...contentHoveredStyle};
         }
-        const finalVerticalScrollbarStyle = { ...styles.verticalScrollBar, ...verticalScrollbarStyle};
+        const finalVerticalScrollbarStyle = (verticalScrollbarStyle) ? { ...styles.verticalScrollBar, ...verticalScrollbarStyle} : styles.verticalScrollBar;
 
         let scrollbarY = this.canScrollY()? (
             <ScrollBar
@@ -130,11 +136,12 @@ export default class ScrollArea extends React.Component{
         ): null;
 
         // Merge horizontal container & scrollbar styles with default ones if passed
-        let finalHorizontalContainerStyle = {...styles.horizontalScrollBarContainer, ...horizontalContainerStyle};
+        // Trying to make optimization here - if additional styles are not used return const object
+        let finalHorizontalContainerStyle = (horizontalContainerStyle) ? {...styles.horizontalScrollBarContainer, ...horizontalContainerStyle} : styles.horizontalScrollBarContainer;
         if (isHovered) {
             finalHorizontalContainerStyle = {...finalHorizontalContainerStyle, ...contentHoveredStyle};
         }
-        const finalHorizontalScrollbarStyle = {...styles.horizontalScrollBar, ...horizontalScrollbarStyle};
+        const finalHorizontalScrollbarStyle = (horizontalScrollbarStyle) ? {...styles.horizontalScrollBar, ...horizontalScrollbarStyle} : styles.horizontalScrollBar;
 
         let scrollbarX = this.canScrollX()? (
             <ScrollBar
@@ -169,8 +176,8 @@ export default class ScrollArea extends React.Component{
         };
         let springifiedContentStyle = withMotion ? modifyObjValues(calculatedContentStyle, x => spring(x)) : calculatedContentStyle;
 
-        let finalContentStyle = {...styles.scrollAreaContent, ...contentStyle};
-        const finalMainStyle = {...styles.scrollArea, ...style};
+        let finalContentStyle = (contentStyle) ? {...styles.scrollAreaContent, ...contentStyle} : styles.scrollAreaContent;
+        const finalMainStyle = (style) ? {...styles.scrollArea, ...style} : styles.scrollArea;
 
         return (
             <Motion style={springifiedContentStyle}>
